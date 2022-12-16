@@ -32,6 +32,8 @@
   error_position += strlen(yytext);
   return INTEGER; 
 }
+"int" { error_position += strlen(yytext); return INTEGER_DECLARE; }
+"double" { error_position += strlen(yytext); return DOUBLE_DECLARE; }
 [A-Za-z]+[A-Za-z0-9]* { 
   /* ID */ 
   yylval.attr[0] = (char*)malloc(sizeof(yytext) + 1);
@@ -40,8 +42,6 @@
   error_position += strlen(yytext);
   return ID; 
 }
-"int" { error_position += strlen(yytext); return INTEGER_DECLARE; }
-"double" { error_position += strlen(yytext); return DOUBLE_DECLARE; }
 <<EOF>> { exit(EXIT_SUCCESS); }
 "\n" { error_position = 0; };
 [ \t] { error_position += strlen(yytext); };
