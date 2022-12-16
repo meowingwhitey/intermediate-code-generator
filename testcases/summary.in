@@ -1,6 +1,7 @@
 int a, b, c;
 double d, e;
-a = 20;
+a = -(20*2);
+b = +20
 c = d = 3.14;
 e = c * (a + b) * b * c;
 this_is_error / line

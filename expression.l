@@ -43,7 +43,7 @@
   error_position += strlen(yytext);
   return ID; 
 }
-<<EOF>> { exit(EXIT_SUCCESS); }
+
 "\n" { error_position = 0; syntax_error = FALSE;};
 [ \t] { error_position += strlen(yytext); };
 . { 
