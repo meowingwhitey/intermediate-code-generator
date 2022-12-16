@@ -7,7 +7,6 @@ char* newTemp();
 int yylex(void);
 int declareId();
 int temp_index = 1;
-char symbol[11];
 extern int error_position;
 extern int syntax_error;
 extern FILE* yyin;

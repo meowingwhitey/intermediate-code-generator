@@ -9,18 +9,12 @@
 
 #define TRUE 1
 #define FALSE 0
+
 typedef struct Symbol {
     int type;
     char* name;
     int offset;
 }Symbol;
-
-typedef struct Quadruple{
-    int op;
-    char arg1[11];
-    char arg2[11];
-    char result[11];
-}Quadruple;
 
 /* Symbol 처리 관련 */
 int declareId(int type, char* name);
