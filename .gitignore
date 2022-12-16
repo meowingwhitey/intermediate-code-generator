@@ -1,0 +1,10 @@
+/sample
+*.tab.c
+*.tab.h
+*.o
+*.out
+ic.out
+sbt.out
+*.yy.c
+_*
+*.output

@@ -8,4 +8,4 @@ parser_201720857 :
 
 .PHONY : clean 
 clean : 
-	rm -rf *.tab.c *.tab.h *.yy.c *.out *.o *.tab.h.gch
+	rm -rf *.tab.c *.tab.h *.yy.c *.out *.o *.tab.h.gch *.output
