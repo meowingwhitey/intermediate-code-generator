@@ -68,7 +68,7 @@ int declareId(int type, char* name){
         default: fprintf(stderr, "Variable Type Error: %s\n", name);
             break;
         }
-        fprintf(stderr, "%s %s %d\n", temp_type, symbol_table[size].name, symbol_table[size].offset);
+        //fprintf(stderr, "%s %s %d\n", temp_type, symbol_table[size].name, symbol_table[size].offset);
         fprintf(sbt, "%s %s %d\n", temp_type, symbol_table[size].name, symbol_table[size].offset);
     return symbol_table_size++;
 }

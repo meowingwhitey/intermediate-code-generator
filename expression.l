@@ -16,8 +16,6 @@
 ")" { /* RP */ error_position += strlen(yytext); return RP; }
 "," { /* COMMA */ error_position += strlen(yytext); return COMMA; }
 ";" { error_position += strlen(yytext); return SEMI_COLON; }
-"int" { error_position += strlen(yytext); return INTEGER_DECLARE; }
-"double" { error_position += strlen(yytext); return DOUBLE_DECLARE; }
 [0-9]*[.][0-9]+ { 
   /* DOUBLE */ 
   yylval.attr[0] = (char*)malloc(sizeof(yytext) + 1);
@@ -42,12 +40,14 @@
   error_position += strlen(yytext);
   return ID; 
 }
+"int" { error_position += strlen(yytext); return INTEGER_DECLARE; }
+"double" { error_position += strlen(yytext); return DOUBLE_DECLARE; }
 <<EOF>> { exit(EXIT_SUCCESS); }
 "\n" { error_position = 0; };
 [ \t] { error_position += strlen(yytext); };
 . { 
   printf("Lexical Error in line #%d(%d): cannot use %s.\n", yylineno, error_position + 1, yytext);
-  return ERROR; 
+  return ERROR;
   }
 
 %%

@@ -14,6 +14,7 @@ extern FILE* yyin;
 extern FILE* ic;
 extern char* yytext;
 extern int yylineno;
+int yyerrstatus;
 %}
 %union{
     //[0]: addr, [1]: type
@@ -30,7 +31,10 @@ extern int yylineno;
 %left ADD SUB
 %left MUL DIV
 %% 
-code: code statement SEMI_COLON | statement SEMI_COLON;
+code: code statement SEMI_COLON 
+    | statement SEMI_COLON
+    | error { yyerrok; yyclearin; }
+    ;
 
 statement:
     INTEGER_DECLARE int_variables
@@ -38,18 +42,20 @@ statement:
     | ID ASSIGN expression {
         gen($1[0], "=", $3[0], NULL, NULL);
     }
+    | statement expression
+    |
     ;
 double_variables: 
     double_variables COMMA ID {    
         if(declareId(DOUBLE_DECLARE, $3[0]) == -1){
             fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
-            //yyerrok;
+            yyerrok;
         } 
     } 
     | ID{    
         if(declareId(DOUBLE_DECLARE, $1[0]) == -1){
             fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
-            //yyerrok;
+            yyerrok;
         } 
     }
     ;
@@ -57,15 +63,15 @@ int_variables:
     int_variables COMMA ID {    
         if(declareId(INTEGER_DECLARE, $3[0]) == -1){
             fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
-            //yyerrok;
+            yyerrok;
         } 
     } 
     | ID{    
         if(declareId(INTEGER_DECLARE, $1[0]) == -1){
             fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
-            //yyerrok;
+            yyerrok;
         } 
-    } 
+    }
     ;
 expression:
     INTEGER {
@@ -108,7 +114,7 @@ expression:
         else{
             $$[1] = ERROR;
             yyerror();
-            //yyerrok;
+            yyerrok;
         }
     }
     | expression SUB expression {
@@ -139,7 +145,7 @@ expression:
         else{
             $$[1] = ERROR;
             yyerror();
-            //yyerrok;
+            yyerrok;
         } 
     } 
     | expression MUL expression { 
@@ -170,7 +176,7 @@ expression:
         else{
             $$[1] = ERROR;
             yyerror();
-            //yyerrok;
+            yyerrok;
         } 
     }
     | expression DIV expression {
@@ -201,7 +207,7 @@ expression:
         else{
             $$[1] = ERROR;
             yyerror();
-            //yyerrok;
+            yyerrok;
         }
     }
     | SUB expression { 
@@ -217,7 +223,6 @@ expression:
         $$[0] = $2[0]; 
         $$[1] = $2[1]; 
     }
-    
     ;
     
 %%
@@ -240,4 +245,4 @@ void gen(char* arg1, char* arg2, char* arg3, char* arg4, char* arg5){
     fprintf(ic, "\n");
     return;
 }
-void yyerror() { fprintf(stderr, "Syntax Error in line #%d:%d\n", yylineno, error_position); }
+void yyerror() { fprintf(stderr, "Syntax Error in line #%d:%d (%s)\n", yylineno, error_position, yytext); yyerrok; }
