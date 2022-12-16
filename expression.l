@@ -14,6 +14,7 @@
 "=" { /* ASSIGN */ error_position += strlen(yytext); return ASSIGN; }
 "(" { /* LP */ error_position += strlen(yytext); return LP; }
 ")" { /* RP */ error_position += strlen(yytext); return RP; }
+"," { /* COMMA */ error_position += strlen(yytext); return COMMA; }
 ";" { error_position += strlen(yytext); return SEMI_COLON; }
 "int" { error_position += strlen(yytext); return INTEGER_DECLARE; }
 "double" { error_position += strlen(yytext); return DOUBLE_DECLARE; }
@@ -41,7 +42,7 @@
   error_position += strlen(yytext);
   return ID; 
 }
-<<EOF>> { writeSymbolTable(); exit(EXIT_SUCCESS); }
+<<EOF>> { exit(EXIT_SUCCESS); }
 "\n" { error_position = 0; };
 [ \t] { error_position += strlen(yytext); };
 . { 

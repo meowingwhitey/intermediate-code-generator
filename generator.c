@@ -9,6 +9,7 @@
   yydebug = 1;
 #endif
 */
+
 extern int yylex();
 extern int yyparse();
 extern void yyerror();
@@ -36,27 +37,6 @@ int main(void){
     return 0;
 }
 
-void writeSymbolTable(void){
-    int i = 0;
-    char temp_type[10] = {NULL, };
-    for(i = 0; i < symbol_table_size; i++){
-        switch(symbol_table[i].type){
-            case INTEGER:
-                strcpy(temp_type, "int");
-                break;
-            case DOUBLE:
-                strcpy(temp_type, "double");
-                break;
-            default:
-                fprintf(stderr, "Symbol Table Error!\n");
-                break;
-        }
-        fprintf(stderr, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].offset);
-        fprintf(sbt, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].offset);
-    }
-    return;
-}
-
 int declareId(int type, char* name){
     // 이미 선언되어 있을 경우
     if(checkIdx(name) != -1){
@@ -65,6 +45,7 @@ int declareId(int type, char* name){
     int size = symbol_table_size;
     // variable 길이 제한
     int id_length = strlen(name);
+    char temp_type[10] = {NULL, };
     if(id_length > 10){
         name[10] = NULL;
     }
@@ -79,6 +60,16 @@ int declareId(int type, char* name){
         symbol_offset += INTEGER_SIZE;
         symbol_table[size].type = INTEGER;
     }
+    switch(symbol_table[size].type){
+        case INTEGER: strcpy(temp_type, "int");
+           break;
+        case DOUBLE: strcpy(temp_type, "double");
+            break;
+        default: fprintf(stderr, "Variable Type Error: %s\n", name);
+            break;
+        }
+        fprintf(stderr, "%s %s %d\n", temp_type, symbol_table[size].name, symbol_table[size].offset);
+        fprintf(sbt, "%s %s %d\n", temp_type, symbol_table[size].name, symbol_table[size].offset);
     return symbol_table_size++;
 }
 

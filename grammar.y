@@ -20,13 +20,12 @@ extern int yylineno;
     char* attr[2];
 }
 %token ID 11 INTEGER 12 DOUBLE 13 INTEGER_DECLARE 14 DOUBLE_DECLARE 15
-%token LP 21 RP 22 LS 23 RS 24 SEMI_COLON
+%token LP 21 RP 22 LS 23 RS 24 SEMI_COLON COMMA
 %token ADD 31 SUB 32 MUL 33 DIV 34 ASSIGN 35 ERROR 60
 %type <attr> ID
 %type <attr> INTEGER
 %type <attr> DOUBLE
 %type <attr> expression  
-%type <attr> statement  
 %right ASSIGN
 %left ADD SUB
 %left MUL DIV
@@ -34,23 +33,40 @@ extern int yylineno;
 code: code statement SEMI_COLON | statement SEMI_COLON;
 
 statement:
-    INTEGER_DECLARE ID {
-        if(declareId(INTEGER_DECLARE, $2[0]) == -1){
-            yyerror();
-            //yyerrok;
-        }
-    }
-    | DOUBLE_DECLARE ID {    
-        if(declareId(DOUBLE_DECLARE, $2[0]) == -1){
-            yyerror();
-            //yyerrok;
-        } 
-    }
+    INTEGER_DECLARE int_variables
+    | DOUBLE_DECLARE double_variables
     | ID ASSIGN expression {
         gen($1[0], "=", $3[0], NULL, NULL);
     }
     ;
-
+double_variables: 
+    double_variables COMMA ID {    
+        if(declareId(DOUBLE_DECLARE, $3[0]) == -1){
+            fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
+            //yyerrok;
+        } 
+    } 
+    | ID{    
+        if(declareId(DOUBLE_DECLARE, $1[0]) == -1){
+            fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
+            //yyerrok;
+        } 
+    }
+    ;
+int_variables:
+    int_variables COMMA ID {    
+        if(declareId(INTEGER_DECLARE, $3[0]) == -1){
+            fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
+            //yyerrok;
+        } 
+    } 
+    | ID{    
+        if(declareId(INTEGER_DECLARE, $1[0]) == -1){
+            fprintf(stderr, "Sementic Error in line #%d:%d, ID exists\n", yylineno, error_position);
+            //yyerrok;
+        } 
+    } 
+    ;
 expression:
     INTEGER {
         $$[0] = $1[0];
@@ -224,4 +240,4 @@ void gen(char* arg1, char* arg2, char* arg3, char* arg4, char* arg5){
     fprintf(ic, "\n");
     return;
 }
-void yyerror() { fprintf(stderr, "Syntax Error in line #%d %s\n", yylineno, yytext); }
+void yyerror() { fprintf(stderr, "Syntax Error in line #%d:%d\n", yylineno, error_position); }

@@ -23,6 +23,5 @@ typedef struct Quadruple{
 }Quadruple;
 
 /* Symbol 처리 관련 */
-void writeSymbolTable(void);
 int declareId(int type, char* name);
 int checkIdx(char* name);
