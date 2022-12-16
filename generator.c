@@ -6,10 +6,12 @@
 #include "grammar.tab.h"
 extern int yylex();
 extern int yyparse();
+extern void yyerror();
 extern int yylineno;
 extern char* yytext;
 extern FILE *yyin;
-
+#define INTEGER_SIZE 4
+#define DOUBLE_SIZE 8
 Symbol symbol_table[MAX_TABLE_SIZE];
 Quadruple quadruple_table[MAX_TABLE_SIZE];
 int symbol_table_size = 0;
@@ -18,6 +20,7 @@ int syntax_error = FALSE;
 int lexical_error = FALSE;
 int error_position = 0;
 int lineno = 0;
+int symbol_offset = 0;
 char error_str[MAX_LINE_LENGTH];
 FILE* ic;
 FILE* sbt;
@@ -35,24 +38,24 @@ void writeSymbolTable(void){
     char temp_type[10] = {NULL, };
     for(i = 0; i < symbol_table_size; i++){
         switch(symbol_table[i].type){
-            case INTEGER_DECLARE:
+            case INTEGER:
                 strcpy(temp_type, "int");
                 break;
-            case DOUBLE_DECLARE:
+            case DOUBLE:
                 strcpy(temp_type, "double");
                 break;
             default:
                 fprintf(stderr, "Symbol Table Error!\n");
                 break;
         }
-        fprintf(sbt, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].size);
+        fprintf(stderr, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].offset);
+        fprintf(sbt, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].offset);
     }
     return;  
 }
 
 int declareId(int type, char* name){
-    return 1;
-    if(checkIdx(type, name) == -1){
+    if(checkIdx(name) != -1){
         return -1;
     }
     int size = symbol_table_size;
@@ -63,9 +66,27 @@ int declareId(int type, char* name){
     }
     symbol_table[size].name = name;
     symbol_table[size].type = type;
+    
+    if(type == DOUBLE){
+        symbol_table[size].offset = symbol_offset;
+        symbol_offset = symbol_offset + DOUBLE_SIZE;
+    }
+    if(type == INTEGER){
+        symbol_table[size].offset = INTEGER_SIZE;
+        symbol_offset = symbol_offset + INTEGER_SIZE;
+    }
     return symbol_table_size++;
 }
-int checkIdx(int type, char* name){
+int getType(char* name){
+    int index = checkIdx(name);
+    if (index == -1){
+        yyerror();
+        return -1;
+    }
+    return symbol_table[index].type;
+
+}
+int checkIdx(char* name){
     int id_length = strlen(name);
     if(id_length > 10){ name[10] = NULL; }
     for(int i = 0; i < symbol_table_size; i++){

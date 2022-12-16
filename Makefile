@@ -1,6 +1,6 @@
 parser_201720857 :
 	flex expression.l
-	bison -d grammar.y
+	bison -v -d grammar.y
 	gcc -g -c -o generator.o generator.c
 	gcc -g -c -o lex.yy.o lex.yy.c
 	gcc -g -c -o grammar.tab.o grammar.tab.c
