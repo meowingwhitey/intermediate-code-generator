@@ -86,6 +86,9 @@ expression:
         $$[0] = $1[0];
         $$[1] = $1[1] = getType($1[0]);
     }
+    | ID ASSIGN expression {
+        gen($1[0], "=", $3[0], NULL, NULL);
+    }
     | expression ADD expression {
         if ($1[1] == INTEGER && $3[1] == INTEGER){
             $$[0] = newTemp();

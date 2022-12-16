@@ -1,19 +1,7 @@
-    | INTEGER_DECLARE ID SEMI_COLON NEW_LINE{
-        if(declareId(INTEGER, $2[0]) == -1){
-            yyerror();
-            yyerrok;
-        }
-    }
-    | DOUBLE_DECLARE ID SEMI_COLON NEW_LINE{     
-        if(declareId(DOUBLE, $2[0]) == -1){
-            yyerror();
-            yyerrok;
-        } 
-    }
-
-
-    | SUB expression { 
-        $$[0] = newTemp();
-        gen($$[0], "=", "-", $2[0], NULL); 
-    }
-    | ADD expression { $$[0] = $2[0]; }
+int a, b, c;
+double d, e;
+a = 20;
+c = d = 3.14;
+e = c * (a + b) * b * c;
+this_is_error / line
+a + b + c;
