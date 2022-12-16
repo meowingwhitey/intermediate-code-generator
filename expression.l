@@ -6,7 +6,6 @@
   extern void yyerror();
 %}
 %option yylineno
-
 %%
 "+" { /* ADD */ error_position += strlen(yytext); return ADD; }
 "-" { /* SUB */ error_position += strlen(yytext); return SUB; }
@@ -18,30 +17,32 @@
 ";" { error_position += strlen(yytext); return SEMI_COLON; }
 "int" { error_position += strlen(yytext); return INTEGER_DECLARE; }
 "double" { error_position += strlen(yytext); return DOUBLE_DECLARE; }
-[0-9]*[.][0-9]+   { 
+[0-9]*[.][0-9]+ { 
   /* DOUBLE */ 
-  yylval.str = (char*)malloc(sizeof(yytext) + 1);
-  strcpy(yylval.str, yytext);
-  //yylval.dval = atof(yytext);
+  yylval.attr[0] = (char*)malloc(sizeof(yytext) + 1);
+  strcpy(yylval.attr[0], yytext);
+  yylval.attr[1] = DOUBLE;
   error_position += strlen(yytext);
   return DOUBLE; 
 }
 0|[1-9][0-9]* { 
   /* INTEGER */ 
-  yylval.str = (char*)malloc(sizeof(yytext) + 1);
-  strcpy(yylval.str, yytext);
-  //yylval.ival = atof(yytext);
+  yylval.attr[0] = (char*)malloc(sizeof(yytext) + 1);
+  strcpy(yylval.attr[0], yytext);
+  yylval.attr[1] = INTEGER;
   error_position += strlen(yytext);
   return INTEGER; 
 }
 [A-Za-z]+[A-Za-z0-9]* { 
   /* ID */ 
-  yylval.str = (char*)malloc(sizeof(yytext) + 1);
-  strcpy(yylval.str, yytext);
+  yylval.attr[0] = (char*)malloc(sizeof(yytext) + 1);
+  strcpy(yylval.attr[0], yytext);
+  yylval.attr[1] = ID;
   error_position += strlen(yytext);
   return ID; 
 }
-"\n" { error_position = 0; return NEW_LINE;};
+<<EOF>> { writeSymbolTable(); exit(EXIT_SUCCESS); }
+"\n" { error_position = 0; };
 [ \t] { error_position += strlen(yytext); };
 . { 
   printf("Lexical Error in line #%d(%d): cannot use %s.\n", yylineno, error_position + 1, yytext);

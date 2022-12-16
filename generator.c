@@ -4,6 +4,11 @@
 #include<math.h>
 #include "generator.h"
 #include "grammar.tab.h"
+/*
+#ifdef YYDEBUG
+  yydebug = 1;
+#endif
+*/
 extern int yylex();
 extern int yyparse();
 extern void yyerror();
@@ -13,9 +18,7 @@ extern FILE *yyin;
 #define INTEGER_SIZE 4
 #define DOUBLE_SIZE 8
 Symbol symbol_table[MAX_TABLE_SIZE];
-Quadruple quadruple_table[MAX_TABLE_SIZE];
 int symbol_table_size = 0;
-int quadruple_table_index = 0;
 int syntax_error = FALSE;
 int lexical_error = FALSE;
 int error_position = 0;
@@ -30,9 +33,9 @@ int main(void){
     ic = fopen("ic.out", "w");
     sbt = fopen("sbt.out", "w");
     yyparse();
-    writeSymbolTable();
     return 0;
 }
+
 void writeSymbolTable(void){
     int i = 0;
     char temp_type[10] = {NULL, };
@@ -51,10 +54,11 @@ void writeSymbolTable(void){
         fprintf(stderr, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].offset);
         fprintf(sbt, "%s %s %d\n", temp_type, symbol_table[i].name, symbol_table[i].offset);
     }
-    return;  
+    return;
 }
 
 int declareId(int type, char* name){
+    // 이미 선언되어 있을 경우
     if(checkIdx(name) != -1){
         return -1;
     }
@@ -65,18 +69,19 @@ int declareId(int type, char* name){
         name[10] = NULL;
     }
     symbol_table[size].name = name;
-    symbol_table[size].type = type;
-    
-    if(type == DOUBLE){
+    if(type == DOUBLE_DECLARE){
         symbol_table[size].offset = symbol_offset;
-        symbol_offset = symbol_offset + DOUBLE_SIZE;
+        symbol_offset += DOUBLE_SIZE;
+        symbol_table[size].type = DOUBLE;
     }
-    if(type == INTEGER){
-        symbol_table[size].offset = INTEGER_SIZE;
-        symbol_offset = symbol_offset + INTEGER_SIZE;
+    if(type == INTEGER_DECLARE){
+        symbol_table[size].offset = symbol_offset;
+        symbol_offset += INTEGER_SIZE;
+        symbol_table[size].type = INTEGER;
     }
     return symbol_table_size++;
 }
+
 int getType(char* name){
     int index = checkIdx(name);
     if (index == -1){
@@ -84,8 +89,8 @@ int getType(char* name){
         return -1;
     }
     return symbol_table[index].type;
-
 }
+
 int checkIdx(char* name){
     int id_length = strlen(name);
     if(id_length > 10){ name[10] = NULL; }

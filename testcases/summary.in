@@ -1,0 +1,19 @@
+    | INTEGER_DECLARE ID SEMI_COLON NEW_LINE{
+        if(declareId(INTEGER, $2[0]) == -1){
+            yyerror();
+            yyerrok;
+        }
+    }
+    | DOUBLE_DECLARE ID SEMI_COLON NEW_LINE{     
+        if(declareId(DOUBLE, $2[0]) == -1){
+            yyerror();
+            yyerrok;
+        } 
+    }
+
+
+    | SUB expression { 
+        $$[0] = newTemp();
+        gen($$[0], "=", "-", $2[0], NULL); 
+    }
+    | ADD expression { $$[0] = $2[0]; }

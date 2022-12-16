@@ -1,17 +1,13 @@
  %{
 #include <stdio.h>
 #include "generator.h"
-#define INTEGER_SIZE 4
-#define DOUBLE_SIZE 8
 void yyerror(); 
 void gen(char*, char*, char*, char*, char*);
 char* newTemp();
 int yylex(void);
 int declareId();
-int temp_index = 0;
+int temp_index = 1;
 char symbol[11];
-extern Quadruple quadruple_table[MAX_TABLE_SIZE];
-extern int quadruple_table_index;
 extern int error_position;
 extern int syntax_error;
 extern FILE* yyin;
@@ -20,88 +16,192 @@ extern char* yytext;
 extern int yylineno;
 %}
 %union{
-    char* str;
+    //[0]: addr, [1]: type
+    char* attr[2];
 }
 %token ID 11 INTEGER 12 DOUBLE 13 INTEGER_DECLARE 14 DOUBLE_DECLARE 15
-%token LP 21 RP 22 LS 23 RS 24 SEMI_COLON 25  NEW_LINE 26  
-%token ADD 31 SUB 32 MUL 33 DIV 34 ASSIGN 35 ERROR 60 END_OF_FILE 61
-%type <str> ID
-%type <str> INTEGER
-%type <str> DOUBLE
-%type <str> statement  
-%type <str> expression  
+%token LP 21 RP 22 LS 23 RS 24 SEMI_COLON
+%token ADD 31 SUB 32 MUL 33 DIV 34 ASSIGN 35 ERROR 60
+%type <attr> ID
+%type <attr> INTEGER
+%type <attr> DOUBLE
+%type <attr> expression  
+%type <attr> statement  
+%right ASSIGN
+%left ADD SUB
+%left MUL DIV
 %% 
-program: 
-    program statement SEMI_COLON NEW_LINE |;
-statement: 
-    ID ASSIGN expression {
-        gen($$, "=", $3, NULL, NULL);
-    }
-    | INTEGER_DECLARE ID {
-        if(declareId(INTEGER, $2) == -1){
+code: code statement SEMI_COLON | statement SEMI_COLON;
+
+statement:
+    INTEGER_DECLARE ID {
+        if(declareId(INTEGER_DECLARE, $2[0]) == -1){
             yyerror();
-            yyerrok;
+            //yyerrok;
         }
     }
-    | DOUBLE_DECLARE ID {     
-        if(declareId(DOUBLE, $2) == -1){
+    | DOUBLE_DECLARE ID {    
+        if(declareId(DOUBLE_DECLARE, $2[0]) == -1){
             yyerror();
-            yyerrok;
+            //yyerrok;
         } 
+    }
+    | ID ASSIGN expression {
+        gen($1[0], "=", $3[0], NULL, NULL);
     }
     ;
 
 expression:
-    | INTEGER { $$ = $1; }
-    | DOUBLE { $$ = $1; }
-    | ID { $$ = $1; }
-    | expression ADD expression { 
-        $$ = newTemp();
-        gen($$, "=", $1, "+", $3);
-        /*
-        if(E1.type = integer and E2.type = integer){
-            gen(E.addr ‘=‘ E1. addr ‘int+’ E2.addr);            
-            E.type = integer;
+    INTEGER {
+        $$[0] = $1[0];
+        $$[1] = $1[1] = INTEGER;
+    }
+    | DOUBLE { 
+        $$[0] = $1[0];
+        $$[1] = $1[1] = DOUBLE;
+    }
+    | ID { 
+        $$[0] = $1[0];
+        $$[1] = $1[1] = getType($1[0]);
+    }
+    | expression ADD expression {
+        if ($1[1] == INTEGER && $3[1] == INTEGER){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "+", $3[0]);
+            $$[1] = INTEGER;
         }
-        else if(E1.type = real and E2.type = real){
-            gen(E. addr ‘=‘ E1. addr ‘real+’ E2addr);
-            E.type = real;
+        else if ($1[1] == DOUBLE && $3[1] == DOUBLE){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "+", $3[0]);
+            $$[1] = DOUBLE;
         }
-        else if(E1.type = integer and E2.type = real){
-            u = newtemp;
-            gen (u ‘=‘ ‘inttoreal’ E1. addr);
-            gen (E. addr ‘=‘ u ‘real+’ E2. addr);
-            E.type = real;
+        else if ($1[1] == INTEGER && $3[1] == DOUBLE){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $1[0], NULL);
+            gen($$[0], "=", u, "+", $3[0]);
+            $$[1] = DOUBLE;
         }
-        else if(E1.type = real and E2.type = integer){
-            u = newtemp;
-            gen (u ‘=‘ ‘inttoreal’ E2. addr);
-            gen (E. addr ‘=‘ E1. addr ‘real+’ u);
-             E.type = real; 
+        else if ($1[1] == DOUBLE && $3[1] == INTEGER){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $3[0], NULL);
+            gen($$[0], "=", $1[0], "+", u);
+            $$[1] = DOUBLE; 
         }
         else{
-            E.type = type_error;
+            $$[1] = ERROR;
+            yyerror();
+            //yyerrok;
         }
-        */
     }
-    | expression SUB expression { 
-        $$ = newTemp();
-        gen($$, "=", $1, "+", $3);
+    | expression SUB expression {
+        if ($1[1] == INTEGER && $3[1] == INTEGER){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "-", $3[0]);
+            $$[1] = INTEGER;
+        }
+        else if ($1[1] == DOUBLE && $3[1] == DOUBLE){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "-", $3[0]);
+            $$[1] = DOUBLE;
+        }
+        else if ($1[1] == INTEGER && $3[1] == DOUBLE){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $1[0], NULL);
+            gen($$[0], "=", u, "-", $3[0]);
+            $$[1] = DOUBLE;
+        }
+        else if ($1[1] == DOUBLE && $3[1] == INTEGER){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $3[0], NULL);
+            gen($$[0], "=", $1[0], "-", u);
+            $$[1] = DOUBLE; 
+        }
+        else{
+            $$[1] = ERROR;
+            yyerror();
+            //yyerrok;
+        } 
     } 
     | expression MUL expression { 
-        $$ = newTemp();
-        gen($$, "=", $1, "+", $3);
+        if ($1[1] == INTEGER && $3[1] == INTEGER){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "*", $3[0]);
+            $$[1] = INTEGER;
+        }
+        else if ($1[1] == DOUBLE && $3[1] == DOUBLE){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "*", $3[0]);
+            $$[1] = DOUBLE;
+        }
+        else if ($1[1] == INTEGER && $3[1] == DOUBLE){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $1[0], NULL);
+            gen($$[0], "=", u, "*", $3[0]);
+            $$[1] = DOUBLE;
+        }
+        else if ($1[1] == DOUBLE && $3[1] == INTEGER){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $3[0], NULL);
+            gen($$[0], "=", $1[0], "*", u);
+            $$[1] = DOUBLE; 
+        }
+        else{
+            $$[1] = ERROR;
+            yyerror();
+            //yyerrok;
+        } 
     }
     | expression DIV expression {
-        $$ = newTemp();
-        gen($$, "=", $1, "+", $3);
+        if ($1[1] == INTEGER && $3[1] == INTEGER){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "/", $3[0]);
+            $$[1] = INTEGER;
+        }
+        else if ($1[1] == DOUBLE && $3[1] == DOUBLE){
+            $$[0] = newTemp();
+            gen($$[0], "=", $1[0], "/", $3[0]);
+            $$[1] = DOUBLE;
+        }
+        else if ($1[1] == INTEGER && $3[1] == DOUBLE){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $1[0], NULL);
+            gen($$[0], "=", u, "/", $3[0]);
+            $$[1] = DOUBLE;
+        }
+        else if ($1[1] == DOUBLE && $3[1] == INTEGER){
+            char* u = newTemp();
+            $$[0] = newTemp();
+            gen(u, "=", "inttoreal", $3[0], NULL);
+            gen($$[0], "=", $1[0], "/", u);
+            $$[1] = DOUBLE; 
+        }
+        else{
+            $$[1] = ERROR;
+            yyerror();
+            //yyerrok;
+        }
     }
     | SUB expression { 
-        $$ = newTemp();
-        gen($$, "=", "-", $2, NULL); 
+        $$[0] = newTemp();
+        gen($$[0], "=", "-", $2[0], NULL); 
+        $$[1] = $2[1];
     }
-    | ADD expression { $$ = $2; }
-    | LP expression RP { $$ = $2; }
+    | ADD expression {         
+        $$[0] = $2[0];
+        $$[1] = $2[1];
+    }
+    | LP expression RP { 
+        $$[0] = $2[0]; 
+        $$[1] = $2[1]; 
+    }
+    
     ;
     
 %%
