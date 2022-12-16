@@ -245,4 +245,12 @@ void gen(char* arg1, char* arg2, char* arg3, char* arg4, char* arg5){
     fprintf(ic, "\n");
     return;
 }
-void yyerror() { fprintf(stderr, "Syntax Error in line #%d:%d (%s)\n", yylineno, error_position, yytext); yyerrok; }
+void yyerror() { 
+    if(syntax_error == TRUE){
+        return;
+    }
+    syntax_error = TRUE;
+    fprintf(stderr, "Syntax Error in line #%d:%d (%s)\n", yylineno, error_position, yytext); 
+    yyerrok; 
+    return;
+}

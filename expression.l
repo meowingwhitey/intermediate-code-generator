@@ -3,6 +3,7 @@
   #include "grammar.tab.h"
   extern int error_position;
   extern int lexical_error;
+  extern int syntax_error;
   extern void yyerror();
 %}
 %option yylineno
@@ -43,7 +44,7 @@
   return ID; 
 }
 <<EOF>> { exit(EXIT_SUCCESS); }
-"\n" { error_position = 0; };
+"\n" { error_position = 0; syntax_error = FALSE;};
 [ \t] { error_position += strlen(yytext); };
 . { 
   printf("Lexical Error in line #%d(%d): cannot use %s.\n", yylineno, error_position + 1, yytext);

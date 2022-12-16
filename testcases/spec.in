@@ -1,0 +1,5 @@
+int inta, intb, intc;
+double doublea, doubleb, doublec;
+inta = 10;
+doublea = 10.0;
+doubleb = 20000 + inta * (doublec + intc);
