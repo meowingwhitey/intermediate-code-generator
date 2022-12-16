@@ -21,7 +21,7 @@ int yyerrstatus;
 }
 %token ID 11 INTEGER 12 DOUBLE 13 INTEGER_DECLARE 14 DOUBLE_DECLARE 15
 %token LP 21 RP 22 LS 23 RS 24 SEMI_COLON COMMA
-%token ADD 31 SUB 32 MUL 33 DIV 34 ASSIGN 35 ERROR 60
+%token ADD 31 SUB 32 MUL 33 DIV 34 ASSIGN 35 ERROR 60 UMINUS
 %type <attr> ID
 %type <attr> INTEGER
 %type <attr> DOUBLE
@@ -29,20 +29,18 @@ int yyerrstatus;
 %right ASSIGN
 %left ADD SUB
 %left MUL DIV
+%nonassoc UMINUS
 %% 
-code: code statement SEMI_COLON 
-    | statement SEMI_COLON
+code: 
+    statement SEMI_COLON
+    | code statement SEMI_COLON
     | error { yyerrok; yyclearin; }
     ;
 
 statement:
     INTEGER_DECLARE int_variables
     | DOUBLE_DECLARE double_variables
-    | ID ASSIGN expression {
-        gen($1[0], "=", $3[0], NULL, NULL);
-    }
-    | statement expression
-    |
+    | expression
     ;
 double_variables: 
     double_variables COMMA ID {    
@@ -212,12 +210,12 @@ expression:
             yyerrok;
         }
     }
-    | SUB expression { 
+    | SUB expression %prec UMINUS { 
         $$[0] = newTemp();
         gen($$[0], "=", "-", $2[0], NULL); 
         $$[1] = $2[1];
     }
-    | ADD expression {         
+    | ADD expression %prec UMINUS {         
         $$[0] = $2[0];
         $$[1] = $2[1];
     }
